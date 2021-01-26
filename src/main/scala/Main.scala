@@ -1,8 +1,4 @@
-
-
 import Parser.parser
-
-import java.io.File
 
 
 object Main {
@@ -12,20 +8,12 @@ object Main {
   def main(args:Array[String]): Unit = {
 
 
+      val config  = parser(args.toList)
+      if(config!=null){
+        val converter = new ImageAscii()
+        converter.convertToAscii(config.file,config.out,config.compressionFactor,config.invert)
+      }
 
-    parser.parse(args,Config()) match {
-      case Some(config) =>
-        val d = new File(config.file)
-        if(!d.exists()){
-            println("File")
-        }
-      println
-      val obj = new ImageAscii
-       obj.convertToAscii(config.file,config.out)
-
-      case None =>
-      println("No input received")
-    }
 
   }
 }

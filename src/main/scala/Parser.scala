@@ -1,33 +1,48 @@
-
-import scopt.OptionParser
-
-
 object Parser {
+  val usage = """
+Usage: scala-image-ascii [-c] [-f file] [-w output] ...
+Where: -c   Compression factor by default 1
+       -i   Invert picture by default false
+       -f   Set input file to F
+       -w   Set output file to F
 
-  val parser: OptionParser[Config] = new scopt.OptionParser[Config]("scala-ascii-art") {
-    head("scala-image-ascii")
+"""
 
-    opt[Boolean]('i', "invert").valueName("<bool>").action((x, c) => {
-      c.copy(invert = x)
-    })
+  val unknown = "(^-[^\\s])".r
+  var config:Config = Config()
 
-    opt[Int]('c', "compression").required().valueName("<compression factor>").action((x, c) => {
-      c.copy(compressionFactor = x)
-    })
 
-    opt[Int]('l', "lightness").valueName("<lightness modifier>").action((x, c) => {
-      c.copy(lightnessModifier = x)
-    })
+  val pf: PartialFunction[List[String], List[String]] = {
+    case "-f" :: (arg: String) :: tail => config.file = arg; tail
+    case "-w" :: (arg: String) :: tail => config.out = arg; tail
+    case "-c" :: (arg: String) :: tail => config.compressionFactor = arg.toInt; tail
+    case "-i" :: (arg: String) :: tail => config.invert = arg.toBoolean; tail
+    case "-help" :: tail => die("unknown argument "  + "\n" + usage)
+    case "help" :: tail => die("unknown argument " + "\n" + usage)
+    case unknown(bad) :: tail => die("unknown argument " + bad + "\n" + usage)
+  }
 
-    opt[String]('w', "write").valueName("<output file>").action((x, c) => {
-      c.copy(out=x)
-    })
+  def parser(args: List[String]): Config ={
+    if(args.startsWith(Seq("scala-image-ascii"))){
+      val res = parseArgs(args)
+      if(res == Nil){
+        die("unknown argument "+ "\n" + usage)
 
-    help("help").text("prints this usage text")
+      }
+      return config
+    }
+    die("unknown argument "+ "\n" + usage)
+  }
 
-    arg[String]("<file>") unbounded() optional() action { (x, c) =>
-      c.copy(file = x) } text("optional unbounded args" )
 
+  def parseArgs(args: List[String]): List[String] = args match {
+    case Nil => Nil
+    case _ => if (pf isDefinedAt args) parseArgs(pf(args)) else args.head :: parseArgs(args.tail)
+  }
+
+  def die(msg: String = usage) = {
+    println(msg)
+    sys.exit(1)
   }
 
 }
