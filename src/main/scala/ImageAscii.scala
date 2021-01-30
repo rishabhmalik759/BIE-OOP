@@ -1,3 +1,5 @@
+
+
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.{File, FileWriter, IOException}
@@ -16,31 +18,32 @@ class ImageAscii {
   var height:Int =0
   var width:Int =0
 
-  def convertToAscii(imgDir: String, outDir: String, compressionFactor: Int,invertFlag:Boolean): Unit = {
+  //Convert Image to string
+  def convertToAscii(imgDir: String, compressionFactor: Int,invertFlag:Boolean ): String = {
     try {
-      val img = ImageIO.read(new File(imgDir))
+      val img = ImageIO.read(new File(imgDir)) // Read image file
       this.image = img
       this.sb = new StringBuilder((image.getWidth + 1) * image.getHeight)
       this.SCALE_FACTOR = compressionFactor
 
     }
     catch {
-      case ex: IOException => ex.printStackTrace()
+      case ex: IOException => println(ex.getMessage)
     }
 
-    readImage(image.getHeight, image.getWidth, image)
-    to_grayscale(image.getHeight, image.getWidth)
-     gs = scale(image.getHeight, image.getWidth)
+    readImage(image.getHeight, image.getWidth, image) // read RGB image to an array
+    to_grayscale(image.getHeight, image.getWidth) // convert to greyscale
+     gs = scale(image.getHeight, image.getWidth) //compress image to SCALE_FACTOR
 
     if(invertFlag){
-      invert()
+      invert() // if inverted is true
     }
 
-    val str = to_ascii_string(gs,invertFlag)
-    write(str, outDir)
+    val str = to_ascii_string(gs,invertFlag) // convert to ascii string
+    str
   }
 
-
+  //convert RGB array to grayscale
   def to_grayscale(height: Int, width: Int): Unit = {
     gs = Array.ofDim[Int](height, width)
     var y = 0
@@ -64,7 +67,7 @@ class ImageAscii {
     }
 
   }
-
+  //read RGB image to an array
   def readImage(height: Int, width: Int, image: BufferedImage): Unit = {
     array = Array.ofDim[Int](height, width, 3)
 
@@ -89,13 +92,20 @@ class ImageAscii {
     }
   }
 
-
+  //overwrite to output file
   def write(str: String, outFile: String): Unit = {
-    val fw = new FileWriter(outFile, true);
-    fw.write(str);
-    fw.close()
+    try{
+      val fw = new FileWriter(outFile, false)
+      fw.write(str)
+      fw.close()
+    }
+    catch {
+      case ex: IOException => println(ex.getMessage)
+    }
+
   }
 
+  //convert from Int to Ascii,return an ascii string
   def to_ascii_string(scaledGs:Array[Array[Int]],flag:Boolean): String = {
     val INTENSITY_MAP = "@#$&?^}{><*`'~=+-_,. "
     val INTENSITY_BIN = 255.toInt / INTENSITY_MAP.length
@@ -113,6 +123,7 @@ class ImageAscii {
     im_string
   }
 
+  // scale/compress the the SCALE_FACTOR
   def scale(height: Int, width: Int): Array[Array[Int]] = {
     val w_scaled = width.asInstanceOf[Int] / SCALE_FACTOR
     val h_scaled = height.asInstanceOf[Int] / SCALE_FACTOR
@@ -135,12 +146,13 @@ class ImageAscii {
           //end loop 2
           x += 1
         }
-        scaled(h)(w) = sum.asInstanceOf[Int] / (SCALE_FACTOR * SCALE_FACTOR)
+        scaled(h)(w) = sum / (SCALE_FACTOR * SCALE_FACTOR)
       }}
 
        scaled
     }
 
+  //inverts the image
   def invert(): Unit = {
 
     height = gs.length
