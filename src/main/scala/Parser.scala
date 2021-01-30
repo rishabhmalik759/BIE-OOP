@@ -25,7 +25,7 @@ Where: -c   Compression factor by default 1
      outputFile=""
      compressionFactor = 1
      invert=false
-     console=true
+     console=false
   }
 
   //check for options and save the properties
